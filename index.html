@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ hospital_name }} | Share Your Experience</title>
+<style>
+:root{--navy:#123047;--teal:#167c80;--ink:#20313d;--muted:#657681;--bg:#f3f7f8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink)}
+main{max-width:650px;margin:28px auto;padding:0 16px}.card{background:#fff;border-radius:20px;padding:26px;box-shadow:0 12px 35px #17394b12}
+.brand{background:var(--navy);color:white;padding:24px;border-radius:16px;margin-bottom:20px}
+.brand small{opacity:.8;letter-spacing:.12em;text-transform:uppercase}.brand h1{font-size:26px;margin:8px 0}.brand p{margin:0;color:#d7e6eb}
+h2{font-size:21px;margin:0 0 8px}.intro{color:var(--muted);line-height:1.5;margin:0 0 22px}
+label{display:block;font-weight:650;margin:17px 0 7px}textarea,input{width:100%;border:1px solid #d4dfe3;border-radius:11px;padding:12px;font:inherit;color:var(--ink);background:#fff}
+textarea{min-height:82px;resize:vertical}input:focus,textarea:focus{outline:2px solid #a9d7d6;border-color:var(--teal)}
+button,.button{border:0;border-radius:11px;padding:13px 17px;background:var(--teal);color:white;font-weight:700;font-size:15px;cursor:pointer;text-decoration:none;display:inline-block}
+button:disabled{opacity:.55;cursor:wait}.secondary{background:#e8f1f2;color:var(--navy)}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+#draftBox{display:none;margin-top:24px;padding-top:22px;border-top:1px solid #e4ecee}
+#draft{min-height:150px}.note{font-size:13px;color:var(--muted);line-height:1.5;margin-top:14px}
+#error{color:#a22;margin-top:12px}.step{font-size:12px;font-weight:700;color:var(--teal);letter-spacing:.08em;text-transform:uppercase}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:18px}
+@media(max-width:520px){main{margin:12px auto}.card{padding:19px}.brand h1{font-size:23px}}
+</style>
+</head>
+<body>
+<main>
+  <header class="brand">
+    <small>Patient feedback</small>
+    <h1>{{ hospital_name }}</h1>
+    <p>Your experience matters. Share honest feedback in your own words.</p>
+  </header>
+  <section class="card">
+    <div class="step">Step 1 of 2 · Your experience</div>
+    <h2>Tell us about your visit</h2>
+    <p class="intro">Answer a few short questions. We'll help turn your answers into a review draft. Please share only what you personally experienced.</p>
+    <form id="feedbackForm">
+      <label for="visit_reason">1. What brought you to the hospital? *</label>
+      <textarea id="visit_reason" required maxlength="500" placeholder="For example: consultation, check-up, accompanying a family member..."></textarea>
+
+      <label for="experience">2. How was your overall experience? *</label>
+      <textarea id="experience" required maxlength="700" placeholder="Tell us what actually happened during your visit..."></textarea>
+
+      <label for="staff_doctor">3. Would you like to mention a doctor or staff member? (Optional)</label>
+      <input id="staff_doctor" maxlength="200" placeholder="Only if you want to">
+
+      <label for="improvement">4. Is there anything we could improve? (Optional)</label>
+      <textarea id="improvement" maxlength="500" placeholder="Your honest suggestion..."></textarea>
+
+      <div class="actions"><button id="generate" type="submit">Create my review draft</button></div>
+      <div id="error" role="alert"></div>
+    </form>
+
+    <div id="draftBox">
+      <div class="step">Step 2 of 2 · Review and approve</div>
+      <h2>Your review draft</h2>
+      <p class="intro">Read it carefully. Edit anything that doesn't sound like you. Nothing is posted automatically.</p>
+      <textarea id="draft" maxlength="1500" aria-label="Editable review draft"></textarea>
+      <div class="actions">
+        <button type="button" id="copy" class="secondary">Copy review</button>
+        <a id="googleLink" class="button" href="#" target="_blank" rel="noopener">Continue to Google Reviews</a>
+      </div>
+      <p class="note">You are in control: Google opens separately, and you must paste or enter your review and submit it yourself. Please leave an honest review, whether positive, neutral, or negative.</p>
+    </div>
+  </section>
+  <footer>Feedback is used only to prepare the draft shown above. Do not enter private medical details.</footer>
+</main>
+<script>
+const form=document.getElementById('feedbackForm'), btn=document.getElementById('generate'), err=document.getElementById('error');
+form.addEventListener('submit',async e=>{
+ e.preventDefault(); err.textContent=''; btn.disabled=true; btn.textContent='Preparing draft…';
+ const payload={visit_reason:visit_reason.value,experience:experience.value,staff_doctor:staff_doctor.value,improvement:improvement.value};
+ try{
+  const res=await fetch('/api/draft',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const data=await res.json(); if(!res.ok) throw new Error(data.error||'Could not create draft.');
+  document.getElementById('draft').value=data.draft;
+  document.getElementById('draftBox').style.display='block';
+  document.getElementById('draftBox').scrollIntoView({behavior:'smooth'});
+ }catch(ex){err.textContent=ex.message}
+ finally{btn.disabled=false;btn.textContent='Create my review draft'}
+});
+document.getElementById('copy').addEventListener('click',async()=>{
+ const b=document.getElementById('copy'); await navigator.clipboard.writeText(document.getElementById('draft').value);
+ b.textContent='Copied'; setTimeout(()=>b.textContent='Copy review',1600);
+});
+const reviewUrl={{ google_review_url|tojson }};
+const link=document.getElementById('googleLink');
+if(reviewUrl){link.href=reviewUrl;}else{link.href='#';link.textContent='Google Review link not configured';link.style.opacity='.55';link.style.pointerEvents='none';}
+</script>
+</body>
+</html>
