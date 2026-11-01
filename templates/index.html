@@ -1,14 +1,311 @@
-PARENT FEEDBACK
-{{ school_name }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Sky High English School | Parent Feedback</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 20px;
+    background: #f4f7fb;
+    font-family: Arial, sans-serif;
+    color: #222;
+}
+
+.container {
+    max-width: 550px;
+    margin: 30px auto;
+    background: white;
+    padding: 28px;
+    border-radius: 16px;
+    box-shadow: 0 5px 25px rgba(0,0,0,.08);
+}
+
+.logo {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.logo img {
+    max-width: 110px;
+    max-height: 100px;
+    object-fit: contain;
+}
+
+h1 {
+    color: #303080;
+    text-align: center;
+    font-size: 25px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #666;
+    line-height: 1.5;
+}
+
+.badge {
+    text-align: center;
+    color: #e01020;
+    font-weight: bold;
+    margin: 20px 0;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin: 20px 0 8px;
+    color: #303080;
+}
+
+textarea {
+    width: 100%;
+    min-height: 90px;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 9px;
+    font-size: 15px;
+    resize: vertical;
+}
+
+select {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    margin-top: 10px;
+}
+
+button {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 9px;
+    background: #303080;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+button:hover {
+    background: #e01020;
+}
+
+#result {
+    display: none;
+    margin-top: 25px;
+    padding: 15px;
+    background: #f4f7fb;
+    border-radius: 10px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+#reviewDraft {
+    width: 100%;
+    min-height: 140px;
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.note {
+    text-align: center;
+    font-size: 12px;
+    color: #777;
+    margin-top: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="logo">
+<img src="{{ url_for('static', filename='logo.jpeg') }}"
+     alt="Sky High English School Logo">
+</div>
+
+<h1>Sky High English School</h1>
+
+<p class="subtitle" id="subtitle">
 Your experience matters. Share honest feedback in your own words.
+</p>
+
+<div style="text-align:center;">
+<select id="language" onchange="changeLanguage()">
+<option value="en">English</option>
+<option value="hi">हिन्दी</option>
+</select>
+</div>
+
+<div class="badge" id="badge">
 3 SHORT QUESTIONS · YOUR EXPERIENCE
-          English
-          हिन्दी
-        
-Tell us about your experience
-Answer these three short questions. We’ll turn your answers into a review draft. Please share only what you or your child personally experienced.
-1.How was your admission experience? *
-2.How would you describe the teaching and learning experience? *
-3.How has your overall experience with the school been? *
+</div>
+
+<h3 id="heading">Tell us about your experience</h3>
+
+<label id="q1">1. How was your admission experience? *</label>
+<textarea id="admission"></textarea>
+
+<label id="q2">2. How would you describe the teaching and learning experience? *</label>
+<textarea id="teaching"></textarea>
+
+<label id="q3">3. How has your overall experience with the school been? *</label>
+<textarea id="overall"></textarea>
+
+<button id="submitBtn" onclick="createDraft()">
 Create My Review Draft
-Your answers are used only to prepare a draft. Do not include private student information.
+</button>
+
+<div id="result">
+<strong id="resultHeading">Your Review Draft</strong>
+
+<textarea id="reviewDraft"></textarea>
+
+<button onclick="copyDraft()" id="copyBtn">
+Copy Review
+</button>
+
+<a href="{{ google_review_url }}"
+   target="_blank"
+   rel="noopener noreferrer">
+<button type="button" id="googleBtn">
+Continue to Google Review
+</button>
+</a>
+</div>
+
+<p class="note" id="note">
+Your answers are used only to prepare a draft.
+Do not include private student information.
+</p>
+
+</div>
+
+<script>
+
+const translations = {
+en: {
+subtitle: "Your experience matters. Share honest feedback in your own words.",
+badge: "3 SHORT QUESTIONS · YOUR EXPERIENCE",
+heading: "Tell us about your experience",
+q1: "1. How was your admission experience? *",
+q2: "2. How would you describe the teaching and learning experience? *",
+q3: "3. How has your overall experience with the school been? *",
+submit: "Create My Review Draft",
+result: "Your Review Draft",
+copy: "Copy Review",
+google: "Continue to Google Review",
+note: "Your answers are used only to prepare a draft. Do not include private student information."
+},
+hi: {
+subtitle: "आपका अनुभव हमारे लिए महत्वपूर्ण है। अपना सच्चा अनुभव साझा करें।",
+badge: "3 छोटे सवाल · आपका अनुभव",
+heading: "अपने अनुभव के बारे में बताएं",
+q1: "1. स्कूल में एडमिशन का आपका अनुभव कैसा रहा? *",
+q2: "2. पढ़ाई और शिक्षण का अनुभव कैसा रहा? *",
+q3: "3. स्कूल के साथ आपका कुल अनुभव कैसा रहा? *",
+submit: "मेरा रिव्यू तैयार करें",
+result: "आपका रिव्यू ड्राफ्ट",
+copy: "रिव्यू कॉपी करें",
+google: "Google Review पर जाएं",
+note: "आपके जवाब केवल रिव्यू ड्राफ्ट तैयार करने के लिए उपयोग होंगे। निजी छात्र जानकारी साझा न करें।"
+}
+};
+
+function changeLanguage() {
+    const lang = document.getElementById("language").value;
+    const t = translations[lang];
+
+    document.getElementById("subtitle").textContent = t.subtitle;
+    document.getElementById("badge").textContent = t.badge;
+    document.getElementById("heading").textContent = t.heading;
+    document.getElementById("q1").textContent = t.q1;
+    document.getElementById("q2").textContent = t.q2;
+    document.getElementById("q3").textContent = t.q3;
+    document.getElementById("submitBtn").textContent = t.submit;
+    document.getElementById("resultHeading").textContent = t.result;
+    document.getElementById("copyBtn").textContent = t.copy;
+    document.getElementById("googleBtn").textContent = t.google;
+    document.getElementById("note").textContent = t.note;
+}
+
+async function createDraft() {
+
+    const admission = document.getElementById("admission").value.trim();
+    const teaching = document.getElementById("teaching").value.trim();
+    const overall = document.getElementById("overall").value.trim();
+
+    const lang = document.getElementById("language").value;
+    const btn = document.getElementById("submitBtn");
+
+    if (!admission || !teaching || !overall) {
+        alert(lang === "hi"
+            ? "कृपया तीनों सवालों के जवाब दें।"
+            : "Please answer all three questions.");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Generating...";
+
+    try {
+
+        const response = await fetch("/api/draft", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                language: lang,
+                admission: admission,
+                teaching: teaching,
+                overall: overall
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Unable to generate review.");
+        }
+
+        document.getElementById("reviewDraft").value = data.draft;
+        document.getElementById("result").style.display = "block";
+
+    } catch (error) {
+        alert(error.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = translations[lang].submit;
+    }
+}
+
+async function copyDraft() {
+    const draft = document.getElementById("reviewDraft");
+
+    try {
+        await navigator.clipboard.writeText(draft.value);
+        alert("Review copied successfully!");
+    } catch (error) {
+        draft.select();
+        document.execCommand("copy");
+        alert("Review copied!");
+    }
+}
+
+</script>
+
+</body>
+</html>
